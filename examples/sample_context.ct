@@ -1,0 +1,128 @@
+{
+  "version": "1.0.0",
+  "format": "contexthub",
+  "created_at": "2024-01-15T14:30:00Z",
+  "last_modified": "2024-01-15T15:45:00Z",
+  "encoding": "utf-8",
+  
+  "metadata": {
+    "session_id": "ctx-2024-001",
+    "model_info": {
+      "name": "gpt-4",
+      "version": "1106-preview",
+      "provider": "openai"
+    },
+    "user_info": {
+      "user_id": "user-001",
+      "session_name": "ContextHub项目设计讨论",
+      "tags": ["系统设计", "AI", "上下文管理", "JSON格式"]
+    },
+    "context_type": "conversation",
+    "priority": "high",
+    "expires_at": "2024-12-31T23:59:59Z"
+  },
+  
+  "context": {
+    "summary": "讨论ContextHub项目的核心设计理念和.ct文件格式规范，重点探讨如何最大化AI模型的上下文管理能力",
+    "key_points": [
+      "标准化上下文文件格式",
+      "结构化会话记录",
+      "元数据管理",
+      "上下文关联机制",
+      "模型状态跟踪",
+      "性能指标监控"
+    ],
+    "conversation": [
+      {
+        "id": "msg-001",
+        "timestamp": "2024-01-15T14:30:00Z",
+        "role": "user",
+        "content": "这是一个上下文管理的项目，首先需要定义一个标准的让模型发挥最大功能的记录上下文的文件格式，把每次会话的记录以这种形式保存为.ct文件，我们首先需要定义这个.ct文件的内容",
+        "tokens": 85,
+        "metadata": {
+          "confidence": 0.98,
+          "context_relevance": 0.95,
+          "intent": "system_design"
+        }
+      },
+      {
+        "id": "msg-002",
+        "timestamp": "2024-01-15T14:31:00Z",
+        "role": "assistant",
+        "content": "我来帮你设计一个标准的上下文管理文件格式。首先让我了解一下当前项目的结构，然后设计一个适合的.ct文件格式。",
+        "tokens": 45,
+        "metadata": {
+          "confidence": 0.95,
+          "context_relevance": 0.9,
+          "response_type": "acknowledgment"
+        }
+      },
+      {
+        "id": "msg-003",
+        "timestamp": "2024-01-15T14:32:00Z",
+        "role": "assistant",
+        "content": "我将创建一个.ct文件格式规范，包含以下核心特性：1. 结构化的会话记录 2. 元数据管理 3. 上下文关联 4. 可扩展性",
+        "tokens": 35,
+        "metadata": {
+          "confidence": 0.92,
+          "context_relevance": 0.88,
+          "response_type": "planning"
+        }
+      }
+    ]
+  },
+  
+  "related_contexts": [
+    {
+      "context_id": "ctx-2023-001",
+      "relationship": "prerequisite",
+      "relevance_score": 0.75,
+      "file_path": "./previous_design_discussions.ct",
+      "description": "前期的系统架构讨论"
+    },
+    {
+      "context_id": "ctx-2023-002",
+      "relationship": "reference",
+      "relevance_score": 0.6,
+      "file_path": "./json_format_research.ct",
+      "description": "JSON格式研究资料"
+    }
+  ],
+  
+  "model_state": {
+    "temperature": 0.7,
+    "max_tokens": 4000,
+    "system_prompt": "你是一个专业的上下文管理系统设计专家，擅长设计高效、可扩展的AI上下文管理解决方案。请提供详细的技术建议和最佳实践。",
+    "context_window_size": 8000,
+    "memory_usage": {
+      "current": 3200,
+      "max": 8000,
+      "utilization": 0.4
+    },
+    "parameters": {
+      "top_p": 0.9,
+      "frequency_penalty": 0.0,
+      "presence_penalty": 0.0
+    }
+  },
+  
+  "performance": {
+    "response_time": 1.8,
+    "token_efficiency": 0.88,
+    "context_retention": 0.94,
+    "user_satisfaction": 4.8,
+    "metrics": {
+      "context_accuracy": 0.92,
+      "response_relevance": 0.89,
+      "system_efficiency": 0.85
+    }
+  },
+  
+  "extensions": {
+    "custom_fields": {
+      "project_phase": "design",
+      "stakeholders": ["developer", "product_manager"],
+      "complexity_level": "medium"
+    }
+  }
+} 
