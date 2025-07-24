@@ -1,2 +1,2 @@
 # ContextHub
-LLM Context Mange Platform
+LLM Context Manage Platform
