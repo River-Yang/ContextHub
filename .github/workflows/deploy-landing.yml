@@ -1,0 +1,94 @@
+name: 🚀 Deploy Landing Page to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'landing/**'
+      - '.github/workflows/deploy-landing.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🔧 Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: 📄 Create index.html redirect
+      run: |
+        echo '<!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta http-equiv="refresh" content="0; url=landing/index.html">
+          <title>ContextHub - 重定向中...</title>
+          <style>
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              height: 100vh; 
+              margin: 0; 
+              background: #0a0a0a; 
+              color: #fff; 
+            }
+            .loading { text-align: center; }
+            .spinner { 
+              border: 3px solid #333; 
+              border-top: 3px solid #667eea; 
+              border-radius: 50%; 
+              width: 40px; 
+              height: 40px; 
+              animation: spin 1s linear infinite; 
+              margin: 0 auto 20px; 
+            }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          </style>
+        </head>
+        <body>
+          <div class="loading">
+            <div class="spinner"></div>
+            <h2>ContextHub</h2>
+            <p>正在跳转到展示页面...</p>
+            <p><a href="landing/index.html" style="color: #667eea;">点击这里手动跳转</a></p>
+          </div>
+          <script>
+            setTimeout(() => {
+              window.location.href = "landing/index.html";
+            }, 1000);
+          </script>
+        </body>
+        </html>' > index.html
+        
+    - name: 📋 Update landing page paths
+      run: |
+        # 确保 landing 页面中的相对路径正确
+        echo "Landing page files:"
+        ls -la landing/
+        
+    - name: 📦 Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+    - name: 🌐 Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4 
