@@ -1,0 +1,106 @@
+# ContextHub 多模型转换器配置文件
+# 设置你要使用的AI模型API密钥
+
+# 默认使用的模型 (可选择: kimi, openai, claude, qwen, ernie, glm)
+default_model: "kimi"
+
+# API 密钥配置
+api_keys:
+  # Moonshot Kimi API
+  kimi:
+    api_key: "sk-01VeuMzeGR0xmkG14Eon72kxMHrJyJz7lt3hIcOhTXwnQVTP"
+    # 或通过环境变量: export MOONSHOT_API_KEY="your-key"
+    
+  # OpenAI GPT API  
+  openai:
+    api_key: ""
+    # 或通过环境变量: export OPENAI_API_KEY="your-key"
+    
+  # Anthropic Claude API
+  claude:
+    api_key: ""
+    # 或通过环境变量: export ANTHROPIC_API_KEY="your-key"
+    
+  # 阿里云通义千问 API
+  qwen:
+    api_key: ""
+    # 或通过环境变量: export DASHSCOPE_API_KEY="your-key"
+    
+  # 百度文心一言 API
+  ernie:
+    api_key: ""
+    # 或通过环境变量: export BAIDU_API_KEY="your-key"
+    
+  # 智谱AI GLM API
+  glm:
+    api_key: ""
+    # 或通过环境变量: export ZHIPUAI_API_KEY="your-key"
+
+# 模型特定设置
+model_settings:
+  # 文本生成参数
+  generation:
+    max_tokens: 4000
+    temperature: 0.3
+    
+  # 输出设置
+  output:
+    default_dir: "./my_contexts"
+    file_naming: "{filename}_{timestamp}.ct"  # 支持变量: {filename}, {timestamp}, {model}
+    
+  # 任务检测设置
+  task_detection:
+    # 代码文件扩展名
+    code_extensions: 
+      - ".py"
+      - ".js" 
+      - ".ts"
+      - ".tsx"
+      - ".jsx"
+      - ".java"
+      - ".cpp"
+      - ".c"
+      - ".cs"
+      - ".php"
+      - ".rb"
+      - ".go"
+      - ".rs"
+      - ".swift"
+      - ".kt"
+      - ".scala"
+    
+    # 文档文件扩展名  
+    document_extensions:
+      - ".md"
+      - ".txt"
+      - ".pdf"
+      - ".doc"
+      - ".docx"
+      
+    # 图像文件扩展名
+    image_extensions:
+      - ".jpg"
+      - ".jpeg" 
+      - ".png"
+      - ".gif"
+      - ".bmp"
+      - ".tiff"
+      - ".webp"
+
+# 高级设置
+advanced:
+  # 并发处理设置
+  concurrency:
+    enabled: false
+    max_workers: 3
+    
+  # 重试设置
+  retry:
+    max_attempts: 3
+    delay_seconds: 1
+    
+  # 缓存设置
+  cache:
+    enabled: false
+    cache_dir: ".cache"
+    ttl_hours: 24 

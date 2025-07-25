@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContextHub - 上下文是新的源代码</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-brand">
+                <svg class="logo" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
+                    <path d="M8 12h16M8 16h16M8 20h12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#667eea"/>
+                            <stop offset="100%" style="stop-color:#764ba2"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="brand-name">ContextHub</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#features" class="nav-link">功能</a>
+                <a href="#value-prop" class="nav-link">解决方案</a>
+                <a href="#docs" class="nav-link">文档</a>
+                <a href="#github" class="nav-link">GitHub</a>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-primary">开始使用</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-text">🚀 支持多个AI模型</span>
+            </div>
+            
+            <h1 class="hero-title">
+                <span class="title-gradient">上下文是新的源代码</span>
+            </h1>
+            
+            <p class="hero-subtitle">
+                不再写碎片化的提示词。创建结构化的AI上下文。<br>
+                用ContextHub提升你的AI开发工作流程。
+            </p>
+            
+            <div class="hero-actions">
+                <button class="btn btn-primary btn-large">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    立即体验
+                </button>
+                <button class="btn btn-secondary btn-large">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15"/>
+                    </svg>
+                    查看文档
+                </button>
+            </div>
+            
+            <div class="hero-note">
+                <p>支持 Kimi、OpenAI GPT、Claude 等多个AI模型</p>
+            </div>
+        </div>
+        
+        <div class="hero-visual">
+            <div class="terminal-window">
+                <div class="terminal-header">
+                    <div class="terminal-controls">
+                        <span class="control red"></span>
+                        <span class="control yellow"></span>
+                        <span class="control green"></span>
+                    </div>
+                    <div class="terminal-title">ContextHub转换器</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="prompt">$</span>
+                        <span class="command">python convert_multi_model.py my_project.py -m kimi</span>
+                    </div>
+                    <div class="terminal-line output">
+                        <span class="success">🔄 正在分析文件: my_project.py</span>
+                    </div>
+                    <div class="terminal-line output">
+                        <span class="success">✅ 转换完成: my_project_20250125.ct</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">$</span>
+                        <span class="cursor">_</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">你的AI开发新路径</h2>
+                <p class="section-subtitle">提升现有工具或尝试新方法。我们都为你准备好了。</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">多模型支持</h3>
+                    <p class="feature-description">
+                        支持Kimi、OpenAI GPT、Claude等主流AI模型。
+                        一个工具，多种选择，自动故障转移。
+                    </p>
+                    <ul class="feature-list">
+                        <li>✓ 智能模型切换</li>
+                        <li>✓ 自动重试机制</li>
+                        <li>✓ 统一接口设计</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">标准化上下文</h3>
+                    <p class="feature-description">
+                        将任何文件转换为结构化的.ct格式。
+                        保持上下文完整性，提升AI理解能力。
+                    </p>
+                    <ul class="feature-list">
+                        <li>✓ 支持多种文件格式</li>
+                        <li>✓ 智能任务类型检测</li>
+                        <li>✓ 结构化元数据</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">开发者友好</h3>
+                    <p class="feature-description">
+                        命令行工具、Web界面、Python API。
+                        无论你喜欢哪种方式，都能轻松集成。
+                    </p>
+                    <ul class="feature-list">
+                        <li>✓ 命令行工具</li>
+                        <li>✓ Web管理界面</li>
+                        <li>✓ Python SDK</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Value Proposition -->
+    <section id="value-prop" class="value-prop">
+        <div class="container">
+            <div class="value-content">
+                <h2 class="value-title">保持上下文的重要性</h2>
+                <p class="value-subtitle">当AI真正理解你的意图时，一切都会改变。了解原因</p>
+                
+                <div class="value-grid">
+                    <div class="value-item">
+                        <div class="value-icon">👤</div>
+                        <h3>对你而言</h3>
+                        <ul>
+                            <li>✓ 会话间不再丢失上下文</li>
+                            <li>✓ 基于完整理解构建功能</li>
+                            <li>✓ 从提示词进化中学习</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="value-item">
+                        <div class="value-icon">👥</div>
+                        <h3>对团队而言</h3>
+                        <ul>
+                            <li>✓ 有上下文的代码审查</li>
+                            <li>✓ 分享AI技术和最佳实践</li>
+                            <li>✓ 减少新成员入职时间</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="value-item">
+                        <div class="value-icon">🚀</div>
+                        <h3>对未来而言</h3>
+                        <ul>
+                            <li>✓ 创建可搜索的知识库</li>
+                            <li>✓ 维护软件演进理解</li>
+                            <li>✓ 保存架构决策和理由</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="demo">
+        <div class="container">
+            <div class="demo-content">
+                <div class="demo-text">
+                    <h2 class="demo-title">看看我们的产品如何工作</h2>
+                    <div class="demo-features">
+                        <div class="demo-feature">
+                            <span class="demo-icon">💾</span>
+                            <span>保存</span>
+                        </div>
+                        <div class="demo-feature">
+                            <span class="demo-icon">🔗</span>
+                            <span>分享</span>
+                        </div>
+                        <div class="demo-feature">
+                            <span class="demo-icon">🚀</span>
+                            <span>发布</span>
+                        </div>
+                    </div>
+                    <p class="demo-description">
+                        永远不让你创作的意图溜走。使用ContextHub自动保存。
+                    </p>
+                </div>
+                
+                <div class="demo-visual">
+                    <div class="code-window">
+                        <div class="code-header">
+                            <div class="code-tabs">
+                                <div class="code-tab active">context.ct</div>
+                                <div class="code-tab">analysis.json</div>
+                            </div>
+                        </div>
+                        <div class="code-body">
+                            <pre class="code-content">{
+  "version": "1.0",
+  "metadata": {
+    "name": "项目分析",
+    "task_type": "code_project",
+    "analysis_model": "Moonshot Kimi"
+  },
+  "instructions": {
+    "system": "你是专门分析代码项目的AI助手",
+    "context": "这是一个Python Web应用..."
+  },
+  "assets": {
+    "state_chain": [
+      {
+        "type": "analysis",
+        "content": "详细的代码分析结果...",
+        "metadata": {
+          "complexity": "medium",
+          "key_points": ["RESTful API", "数据库集成"]
+        }
+      }
+    ]
+  }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="social-proof">
+        <div class="container">
+            <p class="social-title">被AI优先开发者信赖</p>
+            <div class="logos-grid">
+                <div class="logo-item">Moonshot AI</div>
+                <div class="logo-item">OpenAI</div>
+                <div class="logo-item">Anthropic</div>
+                <div class="logo-item">开源社区</div>
+                <div class="logo-item">Python</div>
+                <div class="logo-item">GitHub</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="cta-title">加入那些带着意图保存、分享和发布的开发者</h2>
+                <div class="cta-actions">
+                    <button class="btn btn-primary btn-large">开始使用 ContextHub</button>
+                    <button class="btn btn-secondary btn-large">查看 GitHub</button>
+                </div>
+                <div class="cta-features">
+                    <div class="cta-feature">
+                        <svg class="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>实时分析</span>
+                    </div>
+                    <div class="cta-feature">
+                        <svg class="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                        </svg>
+                        <span>多模型支持</span>
+                    </div>
+                    <div class="cta-feature">
+                        <svg class="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span>社区支持</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="brand-logo">
+                        <svg class="logo" viewBox="0 0 32 32" fill="none">
+                            <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
+                            <path d="M8 12h16M8 16h16M8 20h12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#667eea"/>
+                                    <stop offset="100%" style="stop-color:#764ba2"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <span>ContextHub</span>
+                    </div>
+                    <p class="footer-tagline">上下文是新的源代码。</p>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>产品</h4>
+                        <a href="#" class="footer-link">多模型转换器</a>
+                        <a href="#" class="footer-link">Web界面</a>
+                        <a href="#" class="footer-link">命令行工具</a>
+                        <a href="#" class="footer-link">Python SDK</a>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h4>解决方案</h4>
+                        <a href="#" class="footer-link">个人开发者</a>
+                        <a href="#" class="footer-link">团队协作</a>
+                        <a href="#" class="footer-link">企业级</a>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h4>资源</h4>
+                        <a href="#" class="footer-link">文档</a>
+                        <a href="#" class="footer-link">GitHub</a>
+                        <a href="#" class="footer-link">社区</a>
+                        <a href="#" class="footer-link">更新日志</a>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h4>联系我们</h4>
+                        <a href="#" class="footer-link">support@contexthub.dev</a>
+                        <a href="#" class="footer-link">Twitter</a>
+                        <a href="#" class="footer-link">Discord</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 ContextHub. 保留所有权利。</p>
+                <div class="footer-legal">
+                    <a href="#" class="footer-link">隐私政策</a>
+                    <a href="#" class="footer-link">使用条款</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html> 

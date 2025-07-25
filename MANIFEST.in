@@ -1,0 +1,33 @@
+include README.md
+include LICENSE
+include requirements.txt
+include convert.py
+include create_context.py
+include app.py
+include *.sh
+include *.bat
+include *.md
+
+# 包含配置文件
+include pyproject.toml
+include setup.py
+
+# 包含示例文件
+recursive-include examples *
+recursive-include contexts *
+
+# 包含前端文件
+recursive-include frontend *
+
+# 包含文档
+recursive-include docs *
+
+# 排除不需要的文件
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *~
+global-exclude .DS_Store
+global-exclude .git*
+global-exclude __pycache__
+global-exclude *.so
+global-exclude .pytest_cache 

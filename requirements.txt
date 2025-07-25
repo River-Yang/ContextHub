@@ -3,7 +3,18 @@
 # 核心依赖
 typing-extensions>=4.0.0
 
+# API服务器依赖
+Flask>=2.3.0
+Flask-CORS>=4.0.0
+Werkzeug>=2.3.0
+
+# 文件转换器依赖
+openai>=1.0.0    # 用于与Kimi API集成
+requests>=2.28.0  # 用于HTTP请求
+
+# 多模型支持依赖
+pyyaml>=6.0.0        # 用于配置文件解析
+anthropic>=0.18.0    # 用于Claude API支持
+
 # 可选依赖（用于高级功能）
-# tiktoken>=0.5.0  # 用于精确的token计算
-# openai>=1.0.0   # 用于与OpenAI API集成
-# requests>=2.28.0  # 用于HTTP请求 
+# tiktoken>=0.5.0  # 用于精确的token计算 

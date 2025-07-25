@@ -1,224 +1,189 @@
 #!/usr/bin/env python3
 """
-ContextHub 使用示例
+ContextHub 转换器使用示例
 
-展示如何使用 ContextHub 库来管理 AI 模型的上下文。
+演示如何使用 convert.py 脚本将各种文件转换为 .ct 格式。
 """
 
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import sys
+from pathlib import Path
 
-from contexthub import ContextFile, ContextManager, ContextValidator, ContextUtils
+# 添加项目根目录到 Python 路径
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
-
-def basic_usage_example():
-    """基础使用示例"""
-    print("=== ContextHub 基础使用示例 ===\n")
-    
-    # 1. 创建上下文管理器
-    manager = ContextManager("./contexts")
-    
-    # 2. 创建新的上下文文件
-    context = manager.create_context(
-        session_name="AI助手对话示例",
-        user_id="user-001",
-        model_name="gpt-4",
-        tags=["示例", "对话", "AI"]
-    )
-    
-    print(f"创建了新会话: {context.data['metadata']['session_id']}")
-    
-    # 3. 添加对话消息
-    context.add_message(
-        role="user",
-        content="你好，我想了解如何设计一个上下文管理系统",
-        confidence=0.95,
-        context_relevance=0.9
-    )
-    
-    context.add_message(
-        role="assistant",
-        content="很高兴为您介绍上下文管理系统的设计。一个好的上下文管理系统应该包含以下几个核心组件：1. 结构化数据存储 2. 元数据管理 3. 上下文关联 4. 性能优化",
-        confidence=0.92,
-        context_relevance=0.85
-    )
-    
-    context.add_message(
-        role="user",
-        content="能详细说明一下结构化数据存储吗？",
-        confidence=0.9,
-        context_relevance=0.8
-    )
-    
-    context.add_message(
-        role="assistant",
-        content="结构化数据存储是上下文管理的核心。我们使用JSON格式来存储会话信息，包括：- 会话元数据（ID、时间、用户信息）- 对话历史（消息、角色、时间戳）- 模型状态（参数、配置）- 性能指标（响应时间、token使用等）",
-        confidence=0.88,
-        context_relevance=0.9
-    )
-    
-    # 4. 更新摘要和关键点
-    context.update_summary("讨论了上下文管理系统的设计，重点探讨了结构化数据存储的重要性")
-    context.add_key_point("结构化数据存储是上下文管理的核心")
-    context.add_key_point("JSON格式便于存储和解析")
-    context.add_key_point("元数据管理有助于会话追踪")
-    
-    # 5. 保存上下文
-    context.save()
-    print(f"上下文已保存到: {context.file_path}")
-    
-    return context
+from convert import KimiConverter
 
 
-def validation_example():
-    """验证示例"""
-    print("\n=== 上下文验证示例 ===\n")
+def example_single_file():
+    """示例1: 转换单个文件"""
+    print("=== 示例1: 转换单个文件 ===")
     
-    # 创建验证器
-    validator = ContextValidator()
+    # 确保设置了 API 密钥
+    if not os.environ.get("MOONSHOT_API_KEY"):
+        print("警告: 未设置 MOONSHOT_API_KEY 环境变量")
+        print("请设置: export MOONSHOT_API_KEY='your-api-key'")
+        return
     
-    # 创建一个有效的上下文
-    context = ContextFile()
-    context.set_user_info("user-001", "验证测试")
-    context.set_model_info("gpt-4")
-    
-    # 验证上下文
-    is_valid, errors, warnings = validator.validate_file(context.data)
-    
-    print("验证结果:")
-    print(f"是否有效: {is_valid}")
-    print(f"错误数量: {len(errors)}")
-    print(f"警告数量: {len(warnings)}")
-    
-    if errors:
-        print("\n错误:")
-        for error in errors:
-            print(f"  - {error}")
-    
-    if warnings:
-        print("\n警告:")
-        for warning in warnings:
-            print(f"  - {warning}")
-    
-    # 打印详细验证报告
-    print("\n" + validator.get_validation_report())
+    try:
+        # 创建转换器
+        converter = KimiConverter()
+        
+        # 转换这个示例文件自身
+        current_file = __file__
+        print(f"转换文件: {current_file}")
+        
+        # 转换文件
+        output_file = converter.convert_file(
+            input_file=current_file,
+            output_dir="./my_contexts",  # 输出到 my_contexts 目录
+            task_type="code_project"  # 强制指定为代码项目类型
+        )
+        
+        print(f"✅ 转换成功: {output_file}")
+        
+    except Exception as e:
+        print(f"❌ 转换失败: {e}")
 
 
-def utils_example():
-    """工具类使用示例"""
-    print("\n=== 工具类使用示例 ===\n")
+def example_batch_convert():
+    """示例2: 批量转换目录"""
+    print("\n=== 示例2: 批量转换目录 ===")
     
-    # 创建测试上下文
-    context = ContextFile()
-    context.set_user_info("user-001", "工具测试")
-    context.set_model_info("gpt-4")
+    if not os.environ.get("MOONSHOT_API_KEY"):
+        print("警告: 未设置 MOONSHOT_API_KEY 环境变量")
+        return
     
-    # 添加一些测试消息
-    context.add_message("user", "这是一个测试消息")
-    context.add_message("assistant", "这是AI的回复，包含一些重要信息和建议")
-    context.add_message("user", "谢谢你的帮助")
-    
-    # 1. 生成会话ID
-    session_id = ContextUtils.generate_session_id("test")
-    print(f"生成的会话ID: {session_id}")
-    
-    # 2. 估算token数量
-    text = "这是一个测试文本，用于估算token数量"
-    tokens = ContextUtils.estimate_tokens(text)
-    print(f"文本token估算: {tokens}")
-    
-    # 3. 计算上下文哈希
-    context_hash = ContextUtils.calculate_context_hash(context.data)
-    print(f"上下文哈希: {context_hash[:16]}...")
-    
-    # 4. 提取关键点
-    key_points = ContextUtils.extract_key_points(context.get_conversation())
-    print(f"提取的关键点: {key_points}")
-    
-    # 5. 生成摘要
-    summary = ContextUtils.generate_summary(context.get_conversation())
-    print(f"生成的摘要: {summary}")
-    
-    # 6. 计算对话指标
-    metrics = ContextUtils.calculate_conversation_metrics(context.get_conversation())
-    print(f"对话指标: {metrics}")
-    
-    # 7. 导出为Markdown
-    markdown = ContextUtils.export_to_markdown(context.data)
-    print(f"Markdown导出长度: {len(markdown)} 字符")
+    try:
+        converter = KimiConverter()
+        
+        # 批量转换 contexthub 目录中的 Python 文件
+        converted_files = converter.convert_directory(
+            input_dir="../contexthub",  # 转换 contexthub 目录
+            output_dir="./my_contexts",
+            recursive=True,
+            include_patterns=["*.py"],  # 只处理 Python 文件
+            exclude_patterns=["*__pycache__*", "*.pyc"]  # 排除缓存文件
+        )
+        
+        print(f"✅ 批量转换完成，共处理 {len(converted_files)} 个文件:")
+        for file in converted_files:
+            print(f"  - {file}")
+            
+    except Exception as e:
+        print(f"❌ 批量转换失败: {e}")
 
 
-def advanced_features_example():
-    """高级功能示例"""
-    print("\n=== 高级功能示例 ===\n")
+def example_document_analysis():
+    """示例3: 分析文档文件"""
+    print("\n=== 示例3: 分析文档文件 ===")
     
-    # 创建上下文管理器
-    manager = ContextManager("./contexts")
+    if not os.environ.get("MOONSHOT_API_KEY"):
+        print("警告: 未设置 MOONSHOT_API_KEY 环境变量")
+        return
     
-    # 创建多个上下文文件
-    context1 = manager.create_context("项目讨论1", "user-001", tags=["项目", "设计"])
-    context1.add_message("user", "我们需要设计一个用户界面")
-    context1.add_message("assistant", "建议使用现代化的设计语言，考虑用户体验")
-    context1.save()
+    try:
+        converter = KimiConverter()
+        
+        # 转换 README 文件
+        readme_file = "../README.md"
+        if os.path.exists(readme_file):
+            output_file = converter.convert_file(
+                input_file=readme_file,
+                output_dir="./my_contexts",
+                task_type="document_analysis"  # 文档分析类型
+            )
+            print(f"✅ README 分析完成: {output_file}")
+        else:
+            print("README.md 文件不存在，跳过此示例")
+            
+    except Exception as e:
+        print(f"❌ 文档分析失败: {e}")
+
+
+def example_read_converted_file():
+    """示例4: 读取转换后的 .ct 文件"""
+    print("\n=== 示例4: 读取转换后的 .ct 文件 ===")
     
-    context2 = manager.create_context("项目讨论2", "user-001", tags=["项目", "实现"])
-    context2.add_message("user", "如何实现这个功能？")
-    context2.add_message("assistant", "可以使用React框架，配合TypeScript")
-    context2.save()
-    
-    # 列出所有上下文
-    contexts = manager.list_contexts()
-    print(f"找到 {len(contexts)} 个上下文文件:")
-    for ctx in contexts:
-        print(f"  - {ctx['session_name']} ({ctx['session_id']})")
-    
-    # 查找相关上下文
-    related = ContextUtils.find_related_contexts(
-        context1.data, 
-        search_dir="./contexts",
-        min_similarity=0.1
-    )
-    print(f"\n找到 {len(related)} 个相关上下文")
-    
-    # 优化上下文
-    optimized = ContextUtils.optimize_context_for_model(
-        context1.data,
-        max_tokens=100,
-        model_name="gpt-4"
-    )
-    print(f"优化后的上下文包含 {len(optimized['context']['conversation'])} 条消息")
-    
-    # 合并上下文
-    merged = ContextUtils.merge_contexts([context1.data, context2.data], "append")
-    print(f"合并后的上下文包含 {len(merged['context']['conversation'])} 条消息")
+    try:
+        # 查找最新的 .ct 文件
+        contexts_dir = Path("./my_contexts")
+        if not contexts_dir.exists():
+            print("my_contexts 目录不存在，请先运行其他示例")
+            return
+        
+        ct_files = list(contexts_dir.glob("*.ct"))
+        if not ct_files:
+            print("未找到 .ct 文件，请先运行其他示例")
+            return
+        
+        # 选择最新的文件
+        latest_file = max(ct_files, key=lambda f: f.stat().st_mtime)
+        print(f"读取文件: {latest_file}")
+        
+        # 读取并显示基本信息
+        import json
+        with open(latest_file, 'r', encoding='utf-8') as f:
+            ct_data = json.load(f)
+        
+        print(f"版本: {ct_data['version']}")
+        print(f"任务类型: {ct_data['metadata']['task_type']}")
+        print(f"名称: {ct_data['metadata']['name']}")
+        print(f"创建时间: {ct_data['metadata']['createdAt']}")
+        
+        # 显示文件资产信息
+        assets = ct_data.get('assets', {}).get('files', {})
+        print(f"包含文件数: {len(assets)}")
+        
+        for file_path, asset_info in assets.items():
+            state_chain = asset_info.get('state_chain', [])
+            if state_chain:
+                initial_state = state_chain[0]
+                print(f"  文件: {file_path}")
+                print(f"    摘要: {initial_state.get('summary', 'N/A')}")
+                print(f"    复杂度: {initial_state.get('metadata', {}).get('complexity', 'N/A')}")
+        
+        # 显示对话历史
+        history = ct_data.get('history', [])
+        print(f"对话条数: {len(history)}")
+        
+    except Exception as e:
+        print(f"❌ 读取文件失败: {e}")
 
 
 def main():
-    """主函数"""
-    print("ContextHub 使用示例")
-    print("=" * 50)
+    """主函数 - 运行所有示例"""
+    print("ContextHub 转换器使用示例")
+    print("=" * 40)
+    
+    # 检查 API 密钥
+    if not os.environ.get("MOONSHOT_API_KEY"):
+        print("⚠️  使用前请设置 Kimi API 密钥:")
+        print("   export MOONSHOT_API_KEY='your-api-key-here'")
+        print()
+        print("可以从以下链接获取 API 密钥:")
+        print("   https://platform.moonshot.cn/")
+        print()
+    
+    # 创建输出目录
+    os.makedirs("./my_contexts", exist_ok=True)
     
     try:
-        # 基础使用示例
-        context = basic_usage_example()
+        # 运行示例
+        example_single_file()
+        example_batch_convert()
+        example_document_analysis()
+        example_read_converted_file()
         
-        # 验证示例
-        validation_example()
+        print("\n" + "=" * 40)
+        print("✅ 所有示例运行完成！")
+        print("生成的 .ct 文件保存在 ./my_contexts/ 目录中")
         
-        # 工具类示例
-        utils_example()
-        
-        # 高级功能示例
-        advanced_features_example()
-        
-        print("\n=== 示例完成 ===")
-        print("所有示例都已成功运行！")
-        
+    except KeyboardInterrupt:
+        print("\n用户中断运行")
     except Exception as e:
-        print(f"运行示例时出错: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"\n运行示例时出错: {e}")
 
 
 if __name__ == "__main__":

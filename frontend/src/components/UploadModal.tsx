@@ -1,15 +1,16 @@
 import React, { useCallback, useState } from 'react'
-import { Upload, X, FileText, AlertCircle, CheckCircle, Cloud, FolderOpen, Loader } from 'lucide-react'
+import { Plus, X, FileText, AlertCircle, CheckCircle, Cloud, FolderOpen, Loader } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import type { UploadFile } from '@/types/context'
+import { createContextFromFiles as apiCreateFiles } from '@/utils/api'
 
-interface UploadModalProps {
+interface CreateModalProps {
   isOpen: boolean
   onClose: () => void
-  onUpload: (files: UploadFile[]) => void
+  onCreate: (files: UploadFile[]) => void
 }
 
-export function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
+export function CreateModal({ isOpen, onClose, onCreate }: CreateModalProps) {
   const [dragActive, setDragActive] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([])
 
@@ -30,13 +31,12 @@ export function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const files = Array.from(e.dataTransfer.files)
-      const validFiles = files.filter(file => file.name.endsWith('.ct'))
       
-      const newUploadFiles: UploadFile[] = validFiles.map(file => ({
+      const newUploadFiles: UploadFile[] = files.map(file => ({
         file,
         name: file.name,
         size: `${(file.size / 1024).toFixed(1)} KB`,
-        status: 'uploading'
+        status: 'ready'
       }))
       
       setUploadFiles(prev => [...prev, ...newUploadFiles])
@@ -47,36 +47,75 @@ export function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
     const selectedFiles = e.target.files
     if (selectedFiles && selectedFiles.length > 0) {
       const files = Array.from(selectedFiles)
-      const validFiles = files.filter(file => file.name.endsWith('.ct'))
       
-      const newUploadFiles: UploadFile[] = validFiles.map(file => ({
+      const newUploadFiles: UploadFile[] = files.map(file => ({
         file,
         name: file.name,
         size: `${(file.size / 1024).toFixed(1)} KB`,
-        status: 'uploading'
+        status: 'ready'
       }))
       
       setUploadFiles(prev => [...prev, ...newUploadFiles])
     }
   }
 
-  const handleUpload = async () => {
+  const handleCreate = async () => {
     if (uploadFiles.length === 0) return
 
-    // 模拟上传过程
-    const updatedFiles = uploadFiles.map(file => ({
-      ...file,
-      status: 'success' as const
-    }))
-    
-    setUploadFiles(updatedFiles)
-    
-    // 延迟关闭模态框
-    setTimeout(() => {
-      onUpload(updatedFiles)
-      onClose()
-      setUploadFiles([])
-    }, 1000)
+    try {
+      // 更新所有文件状态为上传中
+      setUploadFiles(prev => prev.map(file => ({
+        ...file,
+        status: 'uploading' as const
+      })))
+
+      // 提取实际的File对象
+      const filesToUpload = uploadFiles.map(f => f.file)
+      
+      // 调用API创建上下文文件
+      const response = await apiCreateFiles(filesToUpload)
+      
+      if (response.success) {
+        // 根据API响应更新文件状态
+                 const updatedFiles = uploadFiles.map(file => {
+           const result = response.results.find((r: any) => r.filename === file.name)
+          if (result) {
+            return {
+              ...file,
+              status: result.status as 'success' | 'error',
+              error: result.error
+            }
+          }
+          return file
+        })
+        
+        setUploadFiles(updatedFiles)
+        
+        // 延迟关闭模态框，给用户时间看到结果
+        setTimeout(() => {
+          const successFiles = updatedFiles.filter(f => f.status === 'success')
+          if (successFiles.length > 0) {
+            onCreate(successFiles)
+          }
+          onClose()
+          setUploadFiles([])
+        }, 1500)
+      } else {
+        // 上传失败，显示错误
+        setUploadFiles(prev => prev.map(file => ({
+          ...file,
+          status: 'error' as const,
+          error: response.message || 'Upload failed'
+        })))
+      }
+    } catch (error) {
+      // 网络错误或其他异常
+      setUploadFiles(prev => prev.map(file => ({
+        ...file,
+        status: 'error' as const,
+        error: error instanceof Error ? error.message : 'Upload failed'
+      })))
+    }
   }
 
   const removeFile = (index: number) => {
@@ -103,7 +142,7 @@ export function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
             className="text-xl font-medium"
             style={{ color: 'rgba(7, 11, 17, 1)' }}
           >
-            上传上下文文件
+            新建上下文文件
           </h2>
           <button
             onClick={onClose}
@@ -135,7 +174,7 @@ export function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
               className="mb-2 text-sm font-medium"
               style={{ color: 'rgba(7, 11, 17, 1)' }}
             >
-              拖放 .ct 文件到此处
+              拖放文件到此处，自动转换为 .ct 格式
             </p>
             <p 
               className="mb-4 text-xs"
@@ -148,7 +187,7 @@ export function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
               浏览文件
               <input
                 type="file"
-                accept=".ct"
+                accept=".py,.js,.ts,.tsx,.jsx,.java,.cpp,.c,.h,.hpp,.cs,.php,.rb,.go,.rs,.swift,.kt,.scala,.sh,.bash,.zsh,.html,.css,.scss,.sass,.md,.xml,.vue,.json,.yaml,.yml,.toml,.ini,.cfg,.sql,.r,.m,.pl,.lua,.dart,.txt,.rst,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp"
                 multiple
                 onChange={handleFileSelect}
                 className="hidden"
@@ -198,17 +237,22 @@ export function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
                           {file.status === 'success' ? (
                             <>
                               <CheckCircle className="w-3 h-3 mr-1" />
-                              验证通过
+                              转换成功
                             </>
                           ) : file.status === 'error' ? (
                             <>
                               <AlertCircle className="w-3 h-3 mr-1" />
-                              格式错误
+                              {file.error || '转换失败'}
+                            </>
+                          ) : file.status === 'uploading' ? (
+                            <>
+                              <Loader className="w-3 h-3 mr-1 animate-spin" />
+                              转换中...
                             </>
                           ) : (
                             <>
-                              <Loader className="w-3 h-3 mr-1 animate-spin" />
-                              正在验证
+                              <FileText className="w-3 h-3 mr-1" />
+                              准备转换
                             </>
                           )}
                         </span>
@@ -242,7 +286,7 @@ export function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
                   className="text-xs"
                   style={{ color: 'rgba(7, 11, 17, 1)' }}
                 >
-                  上传进度
+                  转换进度
                 </span>
                 <span 
                   className="text-xs"
@@ -268,11 +312,11 @@ export function UploadModal({ isOpen, onClose, onUpload }: UploadModalProps) {
               取消
             </button>
             <button
-              onClick={handleUpload}
+              onClick={handleCreate}
               className="btn btn-primary btn-sm"
               disabled={uploadFiles.length === 0}
             >
-              上传
+              新建
             </button>
           </div>
         </div>

@@ -1,0 +1,520 @@
+#!/usr/bin/env python3
+"""
+ContextHub 文件转换器 - 使用 Kimi API
+
+使用 Kimi (Moonshot AI) API 来分析各种文件并转换为规范的 .ct 格式文件 (v3.0)。
+"""
+
+import json
+import os
+import base64
+import mimetypes
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Dict, List, Optional, Any, Union
+import uuid
+import argparse
+
+try:
+    from openai import OpenAI
+except ImportError:
+    print("请安装 OpenAI SDK: pip install openai")
+    exit(1)
+
+
+class KimiConverter:
+    """使用 Kimi API 的文件转换器"""
+    
+    def __init__(self, api_key: Optional[str] = None):
+        """
+        初始化 Kimi 转换器
+        
+        Args:
+            api_key: Kimi API 密钥，如果为 None 则从环境变量获取
+        """
+        self.api_key = api_key or os.environ.get("MOONSHOT_API_KEY") or "sk-01VeuMzeGR0xmkG14Eon72kxMHrJyJz7lt3hIcOhTXwnQVTP"
+        if not self.api_key:
+            raise ValueError("请设置 MOONSHOT_API_KEY 环境变量或传入 api_key 参数")
+        
+        self.client = OpenAI(
+            api_key=self.api_key,
+            base_url="https://api.moonshot.cn/v1"
+        )
+        
+        # 支持的文件类型
+        self.text_extensions = {
+            '.py', '.js', '.ts', '.tsx', '.jsx', '.html', '.css', '.scss', '.sass',
+            '.java', '.cpp', '.c', '.h', '.hpp', '.cs', '.php', '.rb', '.go',
+            '.rs', '.swift', '.kt', '.scala', '.sh', '.bash', '.zsh',
+            '.md', '.txt', '.json', '.xml', '.yaml', '.yml', '.toml', '.ini',
+            '.sql', '.r', '.m', '.pl', '.lua', '.dart', '.vue'
+        }
+        
+        self.image_extensions = {
+            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'
+        }
+    
+    def _detect_task_type(self, file_path: str, content: str) -> str:
+        """
+        检测任务类型
+
+        Args:
+            file_path: 文件路径
+            content: 文件内容
+
+        Returns:
+            任务类型: general_chat, document_analysis, code_project
+        """
+        file_ext = Path(file_path).suffix.lower()
+        
+        # 代码文件
+        if file_ext in {'.py', '.js', '.ts', '.tsx', '.jsx', '.java', '.cpp', '.c', 
+                       '.cs', '.php', '.rb', '.go', '.rs', '.swift', '.kt', '.scala'}:
+            return "code_project"
+        
+        # 文档文件
+        if file_ext in {'.md', '.txt', '.pdf', '.doc', '.docx'} or 'README' in file_path.upper():
+            return "document_analysis"
+        
+        # 配置文件等也可能是代码项目的一部分
+        if file_ext in {'.json', '.xml', '.yaml', '.yml', '.toml', '.ini', '.cfg'}:
+            return "code_project"
+        
+        # 默认为文档分析
+        return "document_analysis"
+    
+    def _generate_analysis_prompt(self, file_path: str, content: str, task_type: str) -> str:
+        """
+        根据任务类型生成分析提示词
+
+        Args:
+            file_path: 文件路径
+            content: 文件内容
+            task_type: 任务类型
+
+        Returns:
+            分析提示词
+        """
+        base_prompt = f"""
+请分析以下文件并提供详细的分析结果：
+
+文件路径: {file_path}
+任务类型: {task_type}
+
+请按照以下格式返回JSON结果：
+{{
+  "summary": "文件的简要概述",
+  "key_points": ["关键点1", "关键点2", "关键点3"],
+  "analysis": "详细分析内容",
+  "purpose": "文件的主要用途和功能",
+  "dependencies": ["依赖项1", "依赖项2"] (如果适用),
+  "structure": "文件结构说明" (如果适用),
+  "complexity": "low/medium/high",
+  "suggestions": ["改进建议1", "改进建议2"] (可选)
+}}
+
+文件内容：
+```
+{content}
+```
+"""
+        
+        if task_type == "code_project":
+            base_prompt += """
+请特别关注：
+1. 代码功能和逻辑
+2. 使用的技术栈和框架
+3. 代码质量和结构
+4. 潜在的改进点
+5. 与其他模块的关系
+"""
+        elif task_type == "document_analysis":
+            base_prompt += """
+请特别关注：
+1. 文档的主要内容和结构
+2. 关键信息和要点
+3. 文档类型和用途
+4. 信息的组织方式
+5. 是否有缺失或需要补充的内容
+"""
+        
+        return base_prompt
+    
+    def _call_kimi_api(self, prompt: str, is_image: bool = False, image_data: str = None) -> Dict[str, Any]:
+        """
+        调用 Kimi API
+
+    Args:
+            prompt: 提示词
+            is_image: 是否为图像分析
+            image_data: base64 编码的图像数据
+
+    Returns:
+            API 响应结果
+        """
+        try:
+            if is_image and image_data:
+                # 图像分析
+                messages = [{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_data}"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": prompt
+                        }
+                    ]
+                }]
+                model = "moonshot-v1-8k-vision-preview"
+            else:
+                # 文本分析
+                messages = [
+                    {
+                        "role": "system",
+                        "content": "你是一个专业的代码和文档分析专家，能够深入理解各种编程语言和文档格式。请提供准确、详细的分析结果，并严格按照要求的JSON格式返回。"
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+                model = "kimi-k2-0711-preview"
+            
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.3,  # 降低随机性以获得更一致的结果
+                response_format={"type": "json_object"}
+            )
+            
+            result = json.loads(response.choices[0].message.content)
+            return result
+            
+        except json.JSONDecodeError as e:
+            print(f"解析API响应JSON失败: {e}")
+            return {
+                "summary": "API响应解析失败",
+                "key_points": ["无法解析分析结果"],
+                "analysis": response.choices[0].message.content if 'response' in locals() else "未知错误",
+                "purpose": "未知",
+                "complexity": "unknown"
+            }
+        except Exception as e:
+            print(f"调用Kimi API失败: {e}")
+            return {
+                "summary": f"API调用失败: {str(e)}",
+                "key_points": ["API调用出错"],
+                "analysis": "无法分析文件",
+                "purpose": "未知",
+                "complexity": "unknown"
+            }
+    
+    def _read_file_content(self, file_path: str) -> tuple[str, bool, Optional[str]]:
+        """
+        读取文件内容
+        
+        Args:
+            file_path: 文件路径
+            
+        Returns:
+            (content, is_image, image_data)
+        """
+        file_ext = Path(file_path).suffix.lower()
+        
+        try:
+            if file_ext in self.image_extensions:
+                # 图像文件
+                with open(file_path, 'rb') as f:
+                    image_data = base64.b64encode(f.read()).decode('utf-8')
+                return "", True, image_data
+            
+            elif file_ext in self.text_extensions or file_ext == '':
+                # 文本文件
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                except UnicodeDecodeError:
+                    # 尝试其他编码
+                    with open(file_path, 'r', encoding='gbk') as f:
+                        content = f.read()
+                return content, False, None
+            
+            else:
+                # 尝试作为文本文件读取
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    return content, False, None
+                except UnicodeDecodeError:
+                    return f"二进制文件，无法读取内容。文件大小: {os.path.getsize(file_path)} bytes", False, None
+                    
+        except Exception as e:
+            return f"读取文件失败: {str(e)}", False, None
+    
+    def _create_ct_structure(self, file_path: str, analysis: Dict[str, Any], task_type: str) -> Dict[str, Any]:
+        """
+        创建 .ct 文件结构 (v3.0)
+
+    Args:
+            file_path: 原文件路径
+            analysis: 分析结果
+            task_type: 任务类型
+
+    Returns:
+            .ct 文件结构
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    file_name = Path(file_path).name
+    
+    # 读取原文件内容作为初始状态
+    content, is_image, image_data = self._read_file_content(file_path)
+        
+        ct_structure = {
+        "version": "3.0",
+        "metadata": {
+                "name": f"{file_name} 分析",
+            "task_type": task_type,
+            "createdAt": now,
+                "source_file": file_path,
+                "analysis_model": "kimi-k2-0711-preview"
+            },
+            "instructions": {
+                "role_and_goal": f"你是一个专业的{task_type}专家。基于对文件 {file_name} 的分析，你需要协助用户理解和改进这个{'代码项目' if task_type == 'code_project' else '文档' if task_type == 'document_analysis' else '内容'}。"
+            },
+            "assets": {
+                "files": {
+                    file_path: {
+                        "asset_id": f"file-{uuid.uuid4().hex[:8]}",
+                        "state_chain": [
+                            {
+                                "state_id": "s0",
+                                "timestamp": now,
+                                "summary": f"初始分析: {analysis.get('summary', '文件分析')}",
+                                "content": content if not is_image else f"[图像文件] {file_path}",
+                                "metadata": {
+                                    "file_type": "image" if is_image else "text",
+                                    "complexity": analysis.get("complexity", "unknown"),
+                                    "purpose": analysis.get("purpose", "未知")
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            "examples": [],
+            "history": [
+                {
+                    "role": "system",
+                    "content": f"开始分析文件: {file_path}",
+                    "timestamp": now
+                },
+                {
+                    "role": "assistant", 
+                    "content": f"我已经完成了对文件 {file_name} 的分析。{analysis.get('analysis', '这是分析结果。')}",
+                    "timestamp": now,
+                    "metadata": {
+                        "analysis_summary": analysis.get("summary", ""),
+                        "key_points": analysis.get("key_points", []),
+                        "asset_reference": f"file-{uuid.uuid4().hex[:8]}:s0"
+                    }
+                }
+            ]
+        }
+        
+        # 根据任务类型添加特定内容
+        if task_type == "code_project":
+            ct_structure["instructions"]["role_and_goal"] += " 重点关注代码质量、架构设计和最佳实践。"
+            
+            # 添加依赖信息
+            if "dependencies" in analysis:
+                ct_structure["assets"]["files"][file_path]["state_chain"][0]["metadata"]["dependencies"] = analysis["dependencies"]
+                
+        elif task_type == "document_analysis":
+            ct_structure["instructions"]["role_and_goal"] += " 重点关注内容理解、信息提取和文档结构。"
+            
+        # 添加关键点到 examples
+        if analysis.get("key_points"):
+            ct_structure["examples"] = [
+                {
+                    "context": point,
+                    "usage": "关键理解点"
+                } for point in analysis["key_points"][:3]  # 只取前3个关键点
+            ]
+        
+        return ct_structure
+    
+    def convert_file(self, input_file: str, output_dir: str = "./contexts", 
+                    task_type: Optional[str] = None) -> str:
+        """
+        转换单个文件为 .ct 格式
+        
+        Args:
+            input_file: 输入文件路径
+            output_dir: 输出目录
+            task_type: 强制指定任务类型，如果为 None 则自动检测
+            
+        Returns:
+            生成的 .ct 文件路径
+        """
+        if not os.path.exists(input_file):
+            raise FileNotFoundError(f"文件不存在: {input_file}")
+        
+        print(f"正在分析文件: {input_file}")
+        
+        # 读取文件内容
+        content, is_image, image_data = self._read_file_content(input_file)
+        
+        # 检测或使用指定的任务类型
+        detected_task_type = task_type or self._detect_task_type(input_file, content)
+        print(f"任务类型: {detected_task_type}")
+        
+        # 生成分析提示词
+        if is_image:
+            prompt = f"""
+请分析这个图像文件并提供详细的分析结果。
+
+文件路径: {input_file}
+
+请按照以下格式返回JSON结果：
+{{
+  "summary": "图像的简要描述",
+  "key_points": ["关键点1", "关键点2", "关键点3"],
+  "analysis": "详细的图像分析",
+  "purpose": "图像的主要内容和用途",
+  "complexity": "low/medium/high"
+}}
+"""
+        else:
+            prompt = self._generate_analysis_prompt(input_file, content, detected_task_type)
+        
+        # 调用 Kimi API 进行分析
+        print("正在调用 Kimi API 进行分析...")
+        analysis = self._call_kimi_api(prompt, is_image, image_data)
+        
+        # 创建 .ct 文件结构
+        ct_data = self._create_ct_structure(input_file, analysis, detected_task_type)
+        
+        # 生成输出文件名
+        input_path = Path(input_file)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{input_path.stem}_{timestamp}.ct"
+        output_path = Path(output_dir) / output_filename
+        
+        # 确保输出目录存在
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # 保存 .ct 文件
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(ct_data, f, ensure_ascii=False, indent=2)
+        
+        print(f"转换完成: {output_path}")
+        return str(output_path)
+    
+    def convert_directory(self, input_dir: str, output_dir: str = "./contexts",
+                         recursive: bool = True, include_patterns: Optional[List[str]] = None,
+                         exclude_patterns: Optional[List[str]] = None) -> List[str]:
+        """
+        批量转换目录中的文件
+        
+        Args:
+            input_dir: 输入目录
+            output_dir: 输出目录
+            recursive: 是否递归处理子目录
+            include_patterns: 包含的文件模式 (如 ['*.py', '*.js'])
+            exclude_patterns: 排除的文件模式 (如 ['*test*', '*.pyc'])
+            
+        Returns:
+            生成的 .ct 文件路径列表
+        """
+        if not os.path.exists(input_dir):
+            raise FileNotFoundError(f"目录不存在: {input_dir}")
+        
+        input_path = Path(input_dir)
+        converted_files = []
+        
+        # 获取文件列表
+        if recursive:
+            files = input_path.rglob("*")
+        else:
+            files = input_path.glob("*")
+        
+        # 过滤文件
+        for file_path in files:
+            if not file_path.is_file():
+                continue
+                
+            file_str = str(file_path)
+            
+            # 应用包含模式
+            if include_patterns:
+                if not any(file_path.match(pattern) for pattern in include_patterns):
+                    continue
+            
+            # 应用排除模式
+            if exclude_patterns:
+                if any(file_path.match(pattern) for pattern in exclude_patterns):
+                    continue
+            
+            # 跳过已有的 .ct 文件
+            if file_path.suffix == '.ct':
+                continue
+                
+            try:
+                output_file = self.convert_file(file_str, output_dir)
+                converted_files.append(output_file)
+            except Exception as e:
+                print(f"转换文件失败 {file_str}: {e}")
+                continue
+        
+        print(f"批量转换完成，共处理 {len(converted_files)} 个文件")
+        return converted_files
+
+
+def main():
+    """命令行主函数"""
+    parser = argparse.ArgumentParser(description="使用 Kimi API 将文件转换为 .ct 格式")
+    parser.add_argument("input", help="输入文件或目录路径")
+    parser.add_argument("-o", "--output", default="./contexts", help="输出目录 (默认: ./contexts)")
+    parser.add_argument("-t", "--task-type", choices=["general_chat", "document_analysis", "code_project"],
+                       help="强制指定任务类型")
+    parser.add_argument("-r", "--recursive", action="store_true", help="递归处理目录")
+    parser.add_argument("--include", nargs="+", help="包含的文件模式 (如 *.py *.js)")
+    parser.add_argument("--exclude", nargs="+", help="排除的文件模式 (如 *test* *.pyc)")
+    parser.add_argument("--api-key", help="Kimi API 密钥 (也可通过 MOONSHOT_API_KEY 环境变量设置)")
+    
+    args = parser.parse_args()
+    
+    try:
+        # 创建转换器
+        converter = KimiConverter(api_key=args.api_key)
+        
+        if os.path.isfile(args.input):
+            # 转换单个文件
+            converter.convert_file(args.input, args.output, args.task_type)
+        elif os.path.isdir(args.input):
+            # 批量转换目录
+            converter.convert_directory(
+                args.input, 
+                args.output, 
+                args.recursive,
+                args.include,
+                args.exclude
+            )
+        else:
+            print(f"错误: 输入路径不存在: {args.input}")
+            return 1
+            
+    except Exception as e:
+        print(f"转换失败: {e}")
+        return 1
+    
+    return 0
+
+
+if __name__ == "__main__":
+    exit(main())

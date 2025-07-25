@@ -1,0 +1,113 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "contexthub"
+version = "1.0.0"
+description = "AI Context Management System - 专为AI模型设计的上下文管理工具"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "ContextHub Team", email = "your-email@example.com"}
+]
+maintainers = [
+    {name = "ContextHub Team", email = "your-email@example.com"}
+]
+keywords = ["ai", "context", "management", "llm", "chatgpt", "claude", "kimi"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "typing-extensions>=4.0.0",
+    "openai>=1.0.0",
+    "requests>=2.28.0"
+]
+
+[project.optional-dependencies]
+server = [
+    "Flask>=2.3.0",
+    "Flask-CORS>=4.0.0",
+    "Werkzeug>=2.3.0"
+]
+dev = [
+    "pytest>=6.0",
+    "black",
+    "flake8",
+    "mypy"
+]
+all = [
+    "Flask>=2.3.0",
+    "Flask-CORS>=4.0.0",
+    "Werkzeug>=2.3.0",
+    "pytest>=6.0",
+    "black",
+    "flake8",
+    "mypy"
+]
+
+[project.scripts]
+ctx = "contexthub.cli:main"
+contexthub = "contexthub.cli:main"
+contexthub-server = "contexthub.server:main"
+
+[project.urls]
+Homepage = "https://github.com/your-username/contexthub"
+Repository = "https://github.com/your-username/contexthub"
+Documentation = "https://github.com/your-username/contexthub/blob/main/README.md"
+"Bug Tracker" = "https://github.com/your-username/contexthub/issues"
+
+[tool.setuptools]
+packages = ["contexthub"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+contexthub = [
+    "*.md",
+    "examples/*.ct",
+    "frontend/dist/*",
+    "frontend/dist/**/*"
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py37']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.7"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true 

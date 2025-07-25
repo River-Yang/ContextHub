@@ -1,5 +1,5 @@
 import React from 'react'
-import { FileText, Upload, Plus, User, Search, MessageCircle } from 'lucide-react'
+import { FileText, Plus, User, Search, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/utils/cn'
 
@@ -58,8 +58,8 @@ export function Header({ onUpload, onNewContext, isDarkMode, onToggleTheme }: He
           onClick={onUpload}
           className="btn btn-secondary btn-sm mr-3"
         >
-          <Upload className="w-4 h-4 mr-2" />
-          上传
+          <Plus className="w-4 h-4 mr-2" />
+          新建
         </button>
         
         <button

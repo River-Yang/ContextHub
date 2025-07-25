@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { Search, Grid, List, Eye, Download, Share2, Trash2 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { Sidebar } from '@/components/Sidebar'
-import { UploadModal } from '@/components/UploadModal'
+import { CreateModal } from '@/components/UploadModal'
 import { ContextCard } from '@/components/ContextCard'
 import { ContextViewer } from '@/components/ContextViewer'
 import type { ContextFile, UploadFile } from '@/types/context'
+import { getContexts, downloadContext, deleteContext } from '@/utils/api'
 
 // Mock data updated to include system_prompt, conversation, and assets
 const mockContexts: ContextFile[] = [
@@ -92,8 +93,8 @@ const mockContexts: ContextFile[] = [
 ]
 
 export function ContextList() {
-  const [contexts, setContexts] = useState<ContextFile[]>(mockContexts)
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [contexts, setContexts] = useState<ContextFile[]>([])
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isViewerOpen, setIsViewerOpen] = useState(false)
   const [selectedContext, setSelectedContext] = useState<ContextFile | null>(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
@@ -101,11 +102,50 @@ export function ContextList() {
   const [selectedSort, setSelectedSort] = useState('name')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [searchQuery, setSearchQuery] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleUpload = (files: UploadFile[]) => {
-    console.log('Uploading files:', files)
-    // Here you would handle the actual file upload
-    setIsUploadModalOpen(false)
+  // 加载上下文文件列表
+  const loadContexts = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const response = await getContexts()
+      
+      if (response.success && response.data) {
+        // 转换API响应为ContextFile格式
+        const contextFiles: ContextFile[] = response.data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          updated_at: item.updated_at,
+          size: item.size,
+          system_prompt: "", // 需要获取详细信息才能得到
+          conversation: [],
+          assets: []
+        }))
+        setContexts(contextFiles)
+      } else {
+        setError(response.error || 'Failed to load contexts')
+      }
+    } catch (error) {
+      setError('Network error: Failed to connect to server')
+      console.error('Failed to load contexts:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 页面加载时获取数据
+  useEffect(() => {
+    loadContexts()
+  }, [])
+
+  const handleCreate = (files: UploadFile[]) => {
+    console.log('Files created:', files)
+    setIsCreateModalOpen(false)
+    // 重新加载列表
+    loadContexts()
   }
 
   const handleNewContext = () => {
@@ -125,14 +165,28 @@ export function ContextList() {
     setSelectedContext(updatedContext)
   }
 
-  const handleDownload = (context: ContextFile) => {
-    console.log('Downloading context:', context.name)
-    // Here you would handle the file download
+  const handleDownload = async (context: ContextFile) => {
+    try {
+      await downloadContext(context.id)
+    } catch (error) {
+      console.error('Download failed:', error)
+      alert('Download failed: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    }
   }
 
-  const handleDelete = (context: ContextFile) => {
+  const handleDelete = async (context: ContextFile) => {
     if (confirm(`确定要删除 "${context.name}" 吗？`)) {
-      setContexts(prev => prev.filter(ctx => ctx.id !== context.id))
+      try {
+        const response = await deleteContext(context.id)
+        if (response.success) {
+          setContexts(prev => prev.filter(ctx => ctx.id !== context.id))
+        } else {
+          alert('删除失败: ' + (response.error || 'Unknown error'))
+        }
+      } catch (error) {
+        console.error('Delete failed:', error)
+        alert('删除失败: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      }
     }
   }
 
@@ -166,7 +220,7 @@ export function ContextList() {
   return (
     <div className="w-full min-h-screen">
       <Header
-        onUpload={() => setIsUploadModalOpen(true)}
+        onUpload={() => setIsCreateModalOpen(true)}
         onNewContext={handleNewContext}
         isDarkMode={isDarkMode}
         onToggleTheme={() => setIsDarkMode(!isDarkMode)}
@@ -236,25 +290,51 @@ export function ContextList() {
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-6">
-            {sortedContexts.map((context) => (
-              <ContextCard
-                key={context.id}
-                context={context}
-                onView={handleView}
-                onDownload={handleDownload}
-                onDelete={handleDelete}
-                onShare={handleShare}
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="text-gray-500">加载中...</div>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center h-64">
+              <div className="text-red-500 mb-4">{error}</div>
+              <button 
+                onClick={loadContexts}
+                className="btn btn-primary btn-sm"
+              >
+                重试
+              </button>
+            </div>
+          ) : sortedContexts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64">
+              <div className="text-gray-500 mb-4">暂无上下文文件</div>
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="btn btn-primary btn-sm"
+              >
+                创建第一个文件
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-6">
+              {sortedContexts.map((context) => (
+                <ContextCard
+                  key={context.id}
+                  context={context}
+                  onView={handleView}
+                  onDownload={handleDownload}
+                  onDelete={handleDelete}
+                  onShare={handleShare}
+                />
+              ))}
+            </div>
+          )}
         </main>
       </div>
 
-      <UploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        onUpload={handleUpload}
+      <CreateModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreate}
       />
 
       <ContextViewer

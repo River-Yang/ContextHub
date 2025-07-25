@@ -30,6 +30,6 @@ export interface UploadFile {
   file: File
   name: string
   size: string
-  status: 'uploading' | 'success' | 'error'
+  status: 'ready' | 'uploading' | 'success' | 'error'
   error?: string
 } 
